@@ -6,6 +6,7 @@
   "type": "module",
   "sideEffects": false,
   "scripts": {
+    "test": "echo \"no test specified\"",
     "publishToNPM": "np --no-2fa"
   },
   "repository": {
