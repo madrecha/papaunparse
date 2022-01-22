@@ -4,6 +4,7 @@
   "description": "unparse function of papaparse",
   "main": "index.js",
   "type": "module",
+  "sideEffects": false,
   "scripts": {},
   "repository": {
     "type": "git",
