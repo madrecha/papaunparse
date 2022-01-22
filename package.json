@@ -5,7 +5,9 @@
   "main": "index.js",
   "type": "module",
   "sideEffects": false,
-  "scripts": {},
+  "scripts": {
+    "publishToNPM": "np --no-2fa"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/madrecha/papaunparse.git"
