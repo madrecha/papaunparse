@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "unparse function of papaparse",
   "main": "index.js",
+  "type": "module",
   "scripts": {},
   "repository": {
     "type": "git",
