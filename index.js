@@ -159,7 +159,7 @@ export const unparse = (_input, _config) => {
       return '';
 
     if (str.constructor === Date)
-      return JSON.stringify(str).slice(1, 25);
+      return JSON.stringify(str).slice(1, 25); // slice is to remove quotes and milliseconds from the string returned by JSON.stringify
 
     let needsQuotes = false;
 
