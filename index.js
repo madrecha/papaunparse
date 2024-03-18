@@ -182,9 +182,6 @@ export const unparse = (_input, _config) => {
     return needsQuotes ? `${_quoteChar}${escapedQuoteStr}${_quoteChar}` : escapedQuoteStr;
   }
 
-  function hasAny(str, substrings) {
-    return substrings.some(substring => str.includes(substring));
-  }
 }
 
 /** https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions */
