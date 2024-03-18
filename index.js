@@ -48,6 +48,10 @@ export const unparse = (_input, _config) => {
 
   throw new Error('Unable to serialize unrecognized input');
 
+  /**
+   * Unpacks the configuration options and assigns them to the corresponding variables.
+   * @returns {void}
+   */
   function unpackConfig() {
     if (typeof _config !== 'object')
       return;
@@ -91,7 +95,14 @@ export const unparse = (_input, _config) => {
     }
   }
 
-  /** The double for loop that iterates the data and writes out a CSV string including header row */
+  /**
+   * Serializes the given fields and data into a CSV string. The double for loop that iterates the data and writes out a CSV string including header row
+   *
+   * @param {string | Array<string>} fields - The fields to include in the CSV. Can be a stringified JSON array or an array of strings.
+   * @param {string | Array<Array<any>>} data - The data to include in the CSV. Can be a stringified JSON array of arrays or an array of arrays.
+   * @param {boolean | string} skipEmptyLines - Determines whether to skip empty lines in the CSV. Can be a boolean or the string 'greedy'.
+   * @returns {string} The serialized CSV string.
+   */
   function serialize(fields, data, skipEmptyLines) {
     let csv = '';
 
