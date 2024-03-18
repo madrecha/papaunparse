@@ -170,13 +170,14 @@ export const unparse = (_input, _config) => {
 
     const escapedQuoteStr = str.toString().replace(quoteCharRegex, _escapedQuote);
 
+    // determining whether a given string escapedQuoteStr needs to be enclosed in quotes. The needsQuotes variable is set to true if any of the following conditions are met:
     needsQuotes = needsQuotes
-      || _quotes === true
-      || (typeof _quotes === 'function' && _quotes(str, col))
-      || (Array.isArray(_quotes) && _quotes[col])
-      || BAD_DELIMITERS.some(substring => escapedQuoteStr.includes(substring))
-      || escapedQuoteStr.includes(_delimiter)
-      || escapedQuoteStr.charAt(0) === ' '
+      || _quotes === true // needsQuotes is already true. This means that if needsQuotes was previously set to true, it will remain true.
+      || (typeof _quotes === 'function' && _quotes(str, col))  // _quotes is a function that returns true when passed str and col as arguments. This allows for a custom function to determine if quotes are needed.
+      || (Array.isArray(_quotes) && _quotes[col]) // _quotes is an array and the element at the index col is truthy. This allows for a per-column decision on whether quotes are needed.
+      || BAD_DELIMITERS.some(substring => escapedQuoteStr.includes(substring)) // checks if the string contains any characters that might interfere with CSV parsing, necessitating the use of quotes.
+      || escapedQuoteStr.includes(_delimiter) // checks if the string contains the delimiter character, which would also interfere with CSV parsing.
+      || escapedQuoteStr.charAt(0) === ' ' // The first or last character of escapedQuoteStr is a space. CSV parsers often trim spaces from unquoted strings, so if preservation of leading or trailing spaces is required, the string needs to be quoted.
       || escapedQuoteStr.charAt(escapedQuoteStr.length - 1) === ' ';
 
     return needsQuotes ? `${_quoteChar}${escapedQuoteStr}${_quoteChar}` : escapedQuoteStr;
