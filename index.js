@@ -1,38 +1,19 @@
 
 
-export function unparse(_input, _config) {
-  // Default configuration
-
-  /** whether to surround every datum with quotes */
-  var _quotes = false;
-
-  /** whether to write headers */
-  var _writeHeader = true;
-
-  /** delimiting character(s) */
-  var _delimiter = ',';
-
-  /** newline character(s) */
-  var _newline = '\r\n';
-
-  /** quote character */
-  var _quoteChar = '"';
-
-  /** escaped quote character, either "" or <config.escapeChar>" */
-  var _escapedQuote = _quoteChar + _quoteChar;
-
-  /** whether to skip empty lines */
-  var _skipEmptyLines = false;
-
-  /** the columns (keys) we expect when we unparse objects */
-  var _columns = null;
-
-  /** whether to prevent outputting cells that can be parsed as formulae by spreadsheet software (Excel and LibreOffice) */
-  var _escapeFormulae = false;
+export const unparse = (_input, _config) => {
+  let _quotes = false;
+  let _writeHeader = true;
+  let _delimiter = ',';
+  let _newline = '\r\n';
+  let _quoteChar = '"';
+  let _escapedQuote = _quoteChar + _quoteChar;
+  let _skipEmptyLines = false;
+  let _columns = null;
+  let _escapeFormulae = false;
 
   unpackConfig();
 
-  var quoteCharRegex = new RegExp(escapeRegExp(_quoteChar), 'g');
+  const quoteCharRegex = new RegExp(escapeRegExp(_quoteChar), 'g');
 
   if (typeof _input === 'string')
     _input = JSON.parse(_input);
@@ -65,16 +46,14 @@ export function unparse(_input, _config) {
     return serialize(_input.fields || [], _input.data || [], _skipEmptyLines);
   }
 
-  // Default (any valid paths should return before this)
   throw new Error('Unable to serialize unrecognized input');
-
 
   function unpackConfig() {
     if (typeof _config !== 'object')
       return;
 
     if (typeof _config.delimiter === 'string'
-      && !BAD_DELIMITERS.filter(function (value) { return _config.delimiter.indexOf(value) !== -1; }).length) {
+      && !BAD_DELIMITERS.some(value => _config.delimiter.includes(value))) {
       _delimiter = _config.delimiter;
     }
 
@@ -104,7 +83,7 @@ export function unparse(_input, _config) {
     }
 
     if (_config.escapeChar !== undefined) {
-      _escapedQuote = _config.escapeChar + _quoteChar;
+      _escapedQuote = `${_config.escapeChar}${_quoteChar}`;
     }
 
     if (typeof _config.escapeFormulae === 'boolean' || _config.escapeFormulae instanceof RegExp) {
@@ -114,49 +93,45 @@ export function unparse(_input, _config) {
 
   /** The double for loop that iterates the data and writes out a CSV string including header row */
   function serialize(fields, data, skipEmptyLines) {
-    var csv = '';
+    let csv = '';
 
     if (typeof fields === 'string')
       fields = JSON.parse(fields);
     if (typeof data === 'string')
       data = JSON.parse(data);
 
-    var hasHeader = Array.isArray(fields) && fields.length > 0;
-    var dataKeyedByField = !(Array.isArray(data[0]));
+    const hasHeader = Array.isArray(fields) && fields.length > 0;
+    const dataKeyedByField = !(Array.isArray(data[0]));
 
     // If there a header row, write it first
     if (hasHeader && _writeHeader) {
-      for (var i = 0; i < fields.length; i++) {
-        if (i > 0)
-          csv += _delimiter;
-        csv += safe(fields[i], i);
-      }
+      csv += fields.map((field, i) => i > 0 ? `${_delimiter}${safe(field, i)}` : safe(field, i)).join('');
       if (data.length > 0)
         csv += _newline;
     }
 
     // Then write out the data
-    for (var row = 0; row < data.length; row++) {
-      var maxCol = hasHeader ? fields.length : data[row].length;
+    for (let row = 0; row < data.length; row++) {
+      const maxCol = hasHeader ? fields.length : data[row].length;
 
-      var emptyLine = false;
-      var nullLine = hasHeader ? Object.keys(data[row]).length === 0 : data[row].length === 0;
+      let emptyLine = false;
+      const nullLine = hasHeader ? Object.keys(data[row]).length === 0 : data[row].length === 0;
       if (skipEmptyLines && !hasHeader) {
         emptyLine = skipEmptyLines === 'greedy' ? data[row].join('').trim() === '' : data[row].length === 1 && data[row][0].length === 0;
       }
       if (skipEmptyLines === 'greedy' && hasHeader) {
-        var line = [];
-        for (var c = 0; c < maxCol; c++) {
-          var cx = dataKeyedByField ? fields[c] : c;
+        const line = [];
+        for (let c = 0; c < maxCol; c++) {
+          const cx = dataKeyedByField ? fields[c] : c;
           line.push(data[row][cx]);
         }
         emptyLine = line.join('').trim() === '';
       }
       if (!emptyLine) {
-        for (var col = 0; col < maxCol; col++) {
+        for (let col = 0; col < maxCol; col++) {
           if (col > 0 && !nullLine)
             csv += _delimiter;
-          var colIdx = hasHeader && dataKeyedByField ? fields[col] : col;
+          const colIdx = hasHeader && dataKeyedByField ? fields[col] : col;
           csv += safe(data[row][colIdx], col);
         }
         if (row < data.length - 1 && (!skipEmptyLines || (maxCol > 0 && !nullLine))) {
@@ -175,32 +150,29 @@ export function unparse(_input, _config) {
     if (str.constructor === Date)
       return JSON.stringify(str).slice(1, 25);
 
-    var needsQuotes = false;
+    let needsQuotes = false;
 
     if (_escapeFormulae && typeof str === "string" && _escapeFormulae.test(str)) {
-      str = "'" + str;
+      str = `'${str}`;
       needsQuotes = true;
     }
 
-    var escapedQuoteStr = str.toString().replace(quoteCharRegex, _escapedQuote);
+    const escapedQuoteStr = str.toString().replace(quoteCharRegex, _escapedQuote);
 
     needsQuotes = needsQuotes
       || _quotes === true
       || (typeof _quotes === 'function' && _quotes(str, col))
       || (Array.isArray(_quotes) && _quotes[col])
-      || hasAny(escapedQuoteStr, BAD_DELIMITERS)
-      || escapedQuoteStr.indexOf(_delimiter) > -1
+      || BAD_DELIMITERS.some(substring => escapedQuoteStr.includes(substring))
+      || escapedQuoteStr.includes(_delimiter)
       || escapedQuoteStr.charAt(0) === ' '
       || escapedQuoteStr.charAt(escapedQuoteStr.length - 1) === ' ';
 
-    return needsQuotes ? _quoteChar + escapedQuoteStr + _quoteChar : escapedQuoteStr;
+    return needsQuotes ? `${_quoteChar}${escapedQuoteStr}${_quoteChar}` : escapedQuoteStr;
   }
 
   function hasAny(str, substrings) {
-    for (var i = 0; i < substrings.length; i++)
-      if (str.indexOf(substrings[i]) > -1)
-        return true;
-    return false;
+    return substrings.some(substring => str.includes(substring));
   }
 }
 
